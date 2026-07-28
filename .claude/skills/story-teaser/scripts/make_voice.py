@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""spec.json의 자막을 한국어 나레이션 음성으로 일괄 생성 (사용자 PC에서 실행).
+"""spec.json의 자막을 한국어 나레이션 음성으로 일괄 생성.
 
-이 환경에서는 이그레스 정책으로 edge-tts가 막혀 있다. 카스의 윈도우 PC에서 실행하는 용도.
+클라우드 환경에서도 동작한다 (2026-07 실측) — 단, 프록시 인증서(/root/.ccr/ca-bundle.crt)를
+certifi 번들에 먼저 추가해야 한다. 절차는 SKILL.md의 TTS 섹션 참고. 카스의 윈도우 PC에서도 실행 가능.
 
 준비:
     pip install edge-tts

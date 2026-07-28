@@ -14,6 +14,9 @@ description: 사연·임사체험·야담 롱폼 스크립트와 일러스트 �
 which ffmpeg || (apt-get update -qq && apt-get install -y -qq ffmpeg)
 python3 -c "import numpy" || pip install --break-system-packages -q numpy
 ls ~/.claude/skills/hyperframes >/dev/null || npx hyperframes skills update
+# 한글 명조 폰트 — 없으면 자막이 고딕 대체로 렌더링돼 스타일이 죽는다 (실측 2026-07)
+fc-match "Noto Serif CJK KR" | grep -qi "Noto Serif" || \
+  (apt-get install -y -qq fonts-noto-cjk fonts-noto-cjk-extra && fc-cache -f)
 ```
 
 ## 작업 순서
@@ -98,7 +101,7 @@ ffmpeg -y -i renders/<렌더된>.mp4 -i bgm.wav -c:v copy -c:a aac -b:a 192k -sh
 
 ```bash
 ffmpeg -y -i renders/<렌더된>.mp4 -i voice.wav -i bgm.wav \
-  -filter_complex "[2:a]volume=0.35[b];[1:a][b]amix=inputs=2:duration=first[a]" \
+  -filter_complex "[2:a]volume=0.35[b];[1:a][b]amix=inputs=2:duration=longest:normalize=0[a]" \
   -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -shortest 최종.mp4
 ```
 
@@ -126,8 +129,22 @@ ffmpeg -y -i renders/<렌더된>.mp4 -i voice.wav -i bgm.wav \
 
 ```bash
 pip install --break-system-packages -q edge-tts
+# 이 환경의 프록시가 TLS를 가로채므로 프록시 인증서를 certifi에 먼저 추가해야 한다.
+# 안 하면 CERTIFICATE_VERIFY_FAILED로 실패한다 (실측 2026-07: 추가하면 성공).
+python3 - <<'EOF'
+import certifi, pathlib
+ca = pathlib.Path("/root/.ccr/ca-bundle.crt")
+b = pathlib.Path(certifi.where())
+if ca.exists() and ca.read_text() not in b.read_text():
+    b.write_text(b.read_text() + "\n" + ca.read_text())
+EOF
 timeout 30 python3 <스킬경로>/scripts/make_voice.py spec.json --out voice
 ```
+
+각 mp3 꼬리에 ~1.3초 무음이 붙는다. 배치 계산은 `ffprobe` 전체 길이가 아니라
+`silencedetect`로 잰 **실제 발화 길이**로 할 것 — 15초 안에 4문장이 들어간다.
+문장이 길면 자막 두 줄을 다 읽히지 말고 **핵심 구절만** 따로 뽑아 합성한다
+(spec과 별개의 voice용 json을 만들어 `make_voice.py`에 넘기면 된다).
 
 **성공하면 (voice/ 에 mp3 생성됨) — 전자동 나레이션 믹스:**
 
@@ -141,10 +158,11 @@ ffmpeg -y -i renders/<렌더>.mp4 \
   -i bgm.wav -filter_complex "\
 [1:a]adelay=400|400[v1];[2:a]adelay=3500|3500[v2];[3:a]adelay=6500|6500[v3];\
 [4:a]adelay=9400|9400[v4];[5:a]adelay=11800|11800[v5];\
-[6:a]volume=0.32[b];[v1][v2][v3][v4][v5][b]amix=inputs=6:duration=first:normalize=0[a]" \
+[6:a]volume=0.32[b];[v1][v2][v3][v4][v5][b]amix=inputs=6:duration=longest:normalize=0[a]" \
   -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -shortest 최종.mp4
 ```
-(adelay 값 = 각 자막 start × 1000ms. spec이 바뀌면 같이 바꿀 것)
+(adelay 값 = 각 자막 start × 1000ms. spec이 바뀌면 같이 바꿀 것.
+`duration=first`는 첫 음성이 끝나는 순간 오디오가 잘리므로 쓰지 말 것 — `longest` + `-shortest` 조합이 맞다)
 
 기본 목소리 `ko-KR-InJoonNeural`(차분한 남성), 속도 `-8%`. 사용자가 원하면 변경.
 

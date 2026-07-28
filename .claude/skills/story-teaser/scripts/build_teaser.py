@@ -23,7 +23,7 @@ STYLES = {
     "scroll": {  # ② 야담 두루마리
         "font": '"Noto Serif CJK KR", serif',
         "cap_color": "#f7f0dd",
-        "em_color": "#c0392b",
+        "em_color": "#e0523f",
         "end_bg": "#1a140c",
         "cta_color": "#a89372",
         "vignette": True,

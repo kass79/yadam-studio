@@ -18,7 +18,10 @@
 
 - 이 클라우드 환경은 이그레스 정책이 있다. TTS(edge-tts)는
   `speech.platform.bing.com`이 허용 목록에 있을 때만 동작 — 스킬이 자동 시도 후
-  안 되면 조용히 BGM만으로 진행한다.
+  안 되면 조용히 BGM만으로 진행한다. (2026-07 실측: 도메인은 허용돼 있고,
+  프록시 인증서를 certifi에 추가해야 성공한다 — 절차는 스킬에 있음)
+- 한글 명조 폰트(Noto Serif CJK)가 기본 이미지에 없다 — 설치 없이 렌더링하면
+  자막이 고딕으로 대체된다. 스킬 준비 단계에 설치 명령 있음.
 - 렌더링용 Chromium: `PUPPETEER_EXECUTABLE_PATH=/opt/pw-browsers/chromium`
 - `pandoc` 없음 — docx는 unzip + XML 파싱으로 읽는다 (스킬에 코드 있음).
 - 채팅에 붙여넣은 이미지는 파일로 저장되지 않는다 — 세션 기록(jsonl)에서
