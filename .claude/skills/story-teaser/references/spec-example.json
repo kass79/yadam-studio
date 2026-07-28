@@ -1,0 +1,27 @@
+{
+  "title": "눈먼 소녀와 대장장이 — 하이라이트 티저",
+  "style": "cinematic",
+  "aspect": "16:9",
+  "duration": 14,
+  "source_size": [1376, 768],
+  "shots": [
+    { "image": "img4.webp", "start": 0,   "dur": 3.6, "zoom": "in",  "focus": 0.5 },
+    { "image": "img3.webp", "start": 3,   "dur": 3.6, "zoom": "out", "focus": 0.63 },
+    { "image": "img2.webp", "start": 6,   "dur": 3.6, "zoom": "in",  "focus": 0.3 },
+    { "image": "img1.webp", "start": 9,   "dur": 2.9, "zoom": "out", "focus": 0.45 }
+  ],
+  "captions": [
+    { "start": 0.4, "dur": 2.8, "line1": "장터에 홀로 버려진",       "line2": "앞 못 보는 소녀",                "em": "앞 못 보는 소녀" },
+    { "start": 3.5, "dur": 2.9, "line1": "가장 가난한 대장장이가",   "line2": "그 손을 잡았습니다",            "em": "그 손을 잡았습니다" },
+    { "start": 6.5, "dur": 2.9, "line1": "폭우가 쏟아지던 그날 밤", "line2": "소녀는 어둠 속을 가리켰습니다", "em": "어둠 속을 가리켰습니다" },
+    { "start": 9.4, "dur": 2.2, "line1": "다음 날 아침",             "line2": "온 마을이 무릎을 꿇었습니다",   "em": "무릎을 꿇었습니다" }
+  ],
+  "lightning": [6.05, 6.3],
+  "endcard": {
+    "start": 11.4,
+    "line1": "그날 밤,",
+    "line2": "무슨 일이 있었을까요",
+    "em": "있었을까요",
+    "cta": "본편에서 확인하세요"
+  }
+}

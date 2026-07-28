@@ -1,0 +1,45 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Build and Output logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Project specific artifacts & checklists (User requested exclusion)
+plan_checklist.md
+history.md
+
+# Local env files (Contains sensitive API keys and tokens)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python cache & virtual environment
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Execution Output & Temporary scratch files
+output/
+scratch/
