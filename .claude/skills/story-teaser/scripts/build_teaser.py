@@ -18,7 +18,7 @@ STYLES = {
         "cta_color": "#b7ab98",
         "vignette": True,
         "grain": 0.06,
-        "cap_weight": 700,
+        "cap_weight": 900,
     },
     "scroll": {  # ② 야담 두루마리
         "font": '"Noto Serif CJK KR", serif',
@@ -28,7 +28,7 @@ STYLES = {
         "cta_color": "#a89372",
         "vignette": True,
         "grain": 0.11,
-        "cap_weight": 700,
+        "cap_weight": 900,
     },
     "punchy": {  # ③ 킬러 쇼츠 훅
         "font": '"Noto Sans CJK KR", sans-serif',
@@ -53,11 +53,11 @@ def build(spec):
     end = spec.get("endcard", {})
     src_w, src_h = spec.get("source_size", [1376, 768])
 
-    cap_fs = 62 if vertical else 52
-    cap_bottom = 300 if vertical else 88
-    cap_h = 240 if vertical else 190
-    end_fs = 66 if vertical else 58
-    cta_fs = 40 if vertical else 32
+    cap_fs = 68 if vertical else 74
+    cap_bottom = 300 if vertical else 80
+    cap_h = 280 if vertical else 260
+    end_fs = 74 if vertical else 72
+    cta_fs = 40 if vertical else 34
     grad_h = 720 if vertical else 400
     vig = ("radial-gradient(ellipse 90% 70% at 50% 42%," if vertical
            else "radial-gradient(ellipse 72% 88% at 50% 45%,")
@@ -191,9 +191,9 @@ def build(spec):
         height: {cap_h}px; display: flex; flex-direction: column; align-items: center;
         gap: 14px; overflow: visible; }}
       .cap .line {{ font-size: {cap_fs}px; font-weight: {st['cap_weight']};
-        line-height: 1.35; color: {st['cap_color']}; text-align: center;
-        text-shadow: 0 2px 8px rgba(0,0,0,.9), 0 0 40px rgba(0,0,0,.7); }}
-      .cap .em {{ color: {st['em_color']}; display: inline-block;
+        line-height: 1.3; color: {st['cap_color']}; text-align: center;
+        text-shadow: 0 3px 10px rgba(0,0,0,.95), 0 0 48px rgba(0,0,0,.8); }}
+      .cap .em {{ color: {st['em_color']}; display: inline-block; font-size: 1.15em;
         transform-origin: left center; }}  /* 팝 확대가 오른쪽으로만 — 앞 단어와 안 겹침 */
 
       #vig-i {{ position: absolute; inset: 0; background: {vig}
@@ -210,7 +210,7 @@ def build(spec):
       #end-bg {{ position: absolute; inset: 0; background: {st['end_bg']}; }}
       #end-wrap {{ position: absolute; inset: 0; display: flex; flex-direction: column;
         align-items: center; justify-content: center; gap: 44px; }}
-      #end-q {{ font-size: {end_fs}px; font-weight: 700; color: {st['cap_color']};
+      #end-q {{ font-size: {end_fs}px; font-weight: 900; color: {st['cap_color']};
         text-align: center; line-height: 1.4; letter-spacing: 2px; }}
       #end-q .em {{ color: {st['em_color']}; display: inline-block; }}
       #end-cta {{ font-size: {cta_fs}px; color: {st['cta_color']}; letter-spacing: 10px; }}
