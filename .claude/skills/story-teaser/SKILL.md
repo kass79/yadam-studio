@@ -141,7 +141,7 @@ ffmpeg -y -i renders/<렌더>.mp4 \
   -i bgm.wav -filter_complex "\
 [1:a]adelay=400|400[v1];[2:a]adelay=3500|3500[v2];[3:a]adelay=6500|6500[v3];\
 [4:a]adelay=9400|9400[v4];[5:a]adelay=11800|11800[v5];\
-[6:a]volume=0.32[b];[v1][v2][v3][v4][v5][b]amix=inputs=6:duration=first:normalize=0[a]" \
+[6:a]volume=0.32[b];[b][v1][v2][v3][v4][v5]amix=inputs=6:duration=first:normalize=0,aformat=channel_layouts=stereo[a]" \
   -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -shortest 최종.mp4
 ```
 (adelay 값 = 각 자막 start × 1000ms. spec이 바뀌면 같이 바꿀 것)
@@ -153,6 +153,24 @@ TTS 안 된다고 반복해 알리지 말 것. 사용자가 음성을 원할 때
 Network access → Custom에 `speech.platform.bing.com` 추가(새 세션부터 적용)를
 안내하거나, 카스 PC에서 `scripts/make_voice.py`를 돌려 mp3를 받는다.
 (참고: `hyperframes tts`의 Kokoro 모델은 한국어 미지원이라 대안이 못 된다)
+
+## 일본어 콘텐츠 (검증 완료)
+
+일본어 채널 대본이면:
+
+- 자막·엔드카드를 자연스러운 일본어로 쓰고, spec에 `"font": "\"Noto Serif CJK JP\", serif"` 지정
+- **나레이션은 내장 TTS로 즉시 가능** (한국어와 달리 네트워크 불필요):
+
+```bash
+pip install --break-system-packages -q kokoro-onnx soundfile
+npx hyperframes tts "<문장>" -v jf_alpha -s 0.95 -o voice/01.wav
+```
+
+⚠️ **반드시 히라가나/가타카나로 입력할 것.** 한자를 주면 낭독이 망가져
+5배쯤 길어진다 (실측: 같은 문장이 한자 24초 vs 가나 2.7초).
+자막은 한자, TTS 입력만 가나로 분리한다. 생성 후 각 파일 길이를 `ffprobe`로
+재서 자막 타이밍을 맞추고, 위의 나레이션 믹스 명령으로 합친다
+(amix 첫 입력은 반드시 BGM — 음성을 먼저 넣으면 영상이 음성 길이로 잘린다).
 
 ## 하지 말 것
 
