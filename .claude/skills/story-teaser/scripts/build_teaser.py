@@ -46,6 +46,9 @@ STYLES = {
 def build(spec):
     st = STYLES[spec.get("style", "cinematic")]
     font_family = spec.get("font", st["font"])  # 예: '"Noto Serif CJK JP", serif' (일본어 콘텐츠)
+    em_color = spec.get("em_color", st["em_color"])   # 밝은 그림이면 더 진한 색으로 덮어쓰기
+    # cap_backdrop: 자막 뒤 어두운 띠 (밝은 수채화 배경에서 판독성 확보)
+    backdrop = float(spec.get("cap_backdrop", 0.0))
     vertical = spec.get("aspect", "16:9") == "9:16"
     W, H = (1080, 1920) if vertical else (1920, 1080)
     dur = float(spec["duration"])
@@ -54,11 +57,13 @@ def build(spec):
     end = spec.get("endcard", {})
     src_w, src_h = spec.get("source_size", [1376, 768])
 
-    cap_fs = 62 if vertical else 52
+    # cap_scale: 자막 크기 배율 (1.0 기본, 1.25 = "큰 자막" 요청 시)
+    cs = float(spec.get("cap_scale", 1.0))
+    cap_fs = round((62 if vertical else 52) * cs)
     cap_bottom = 300 if vertical else 88
-    cap_h = 240 if vertical else 190
-    end_fs = 66 if vertical else 58
-    cta_fs = 40 if vertical else 32
+    cap_h = round((240 if vertical else 190) * cs)
+    end_fs = round((66 if vertical else 58) * cs)
+    cta_fs = round((40 if vertical else 32) * min(cs, 1.15))
     grad_h = 720 if vertical else 400
     vig = ("radial-gradient(ellipse 90% 70% at 50% 42%," if vertical
            else "radial-gradient(ellipse 72% 88% at 50% 45%,")
@@ -196,14 +201,17 @@ def build(spec):
       .cap .line {{ font-size: {cap_fs}px; font-weight: {st['cap_weight']};
         line-height: 1.35; color: {st['cap_color']}; text-align: center;
         text-shadow: 0 2px 8px rgba(0,0,0,.9), 0 0 40px rgba(0,0,0,.7); }}
-      .cap .em {{ color: {st['em_color']}; display: inline-block;
-        transform-origin: left center; }}  /* 팝 확대가 오른쪽으로만 — 앞 단어와 안 겹침 */
+      .cap .em {{ color: {em_color}; display: inline-block;
+        transform-origin: left center;  /* 팝 확대가 오른쪽으로만 — 앞 단어와 안 겹침 */
+        /* 강조어 뒤 어두운 판: 밝은 배경에서도 대비 확보 */
+        background: rgba(0,0,0,{0.30 + backdrop * 0.42:.2f});
+        padding: 0 .14em; border-radius: .08em; }}
 
       #vig-i {{ position: absolute; inset: 0; background: {vig}
         rgba(0,0,0,0) 40%, rgba(0,0,0,.38) 74%, rgba(0,0,0,.82) 100%); }}
       #grad-i {{ position: absolute; left: 0; right: 0; bottom: 0; height: {grad_h}px;
-        background: linear-gradient(to top, rgba(0,0,0,.78) 0%, rgba(0,0,0,.35) 55%,
-        rgba(0,0,0,0) 100%); }}
+        background: linear-gradient(to top, rgba(0,0,0,{0.78 + backdrop * 0.2:.2f}) 0%,
+        rgba(0,0,0,{0.35 + backdrop * 0.45:.2f}) 55%, rgba(0,0,0,0) 100%); }}
       #grain-i {{ position: absolute; inset: 0; opacity: {st['grain']};
         background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='240' height='240' filter='url(%23n)' opacity='0.9'/></svg>");
         background-size: 240px 240px; mix-blend-mode: overlay; }}
@@ -215,7 +223,7 @@ def build(spec):
         align-items: center; justify-content: center; gap: 44px; }}
       #end-q {{ font-size: {end_fs}px; font-weight: 700; color: {st['cap_color']};
         text-align: center; line-height: 1.4; letter-spacing: 2px; }}
-      #end-q .em {{ color: {st['em_color']}; display: inline-block; }}
+      #end-q .em {{ color: {em_color}; display: inline-block; }}
       #end-cta {{ font-size: {cta_fs}px; color: {st['cta_color']}; letter-spacing: 10px; }}
       #bg-fill {{ position: absolute; inset: 0; background: #000; }}
     </style>

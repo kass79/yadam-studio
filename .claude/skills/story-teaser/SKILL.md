@@ -163,7 +163,8 @@ Network access → Custom에 `speech.platform.bing.com` 추가(새 세션부터 
 
 ```bash
 pip install --break-system-packages -q kokoro-onnx soundfile
-npx hyperframes tts "<문장>" -v jf_alpha -s 0.95 -o voice/01.wav
+npx hyperframes tts "<문장>" -v jm_kumo -s 0.9 -o voice/01.wav   # 남성 성우 (기본 추천)
+npx hyperframes tts "<문장>" -v jf_alpha -s 0.95 -o voice/01.wav # 여성
 ```
 
 ⚠️ **반드시 히라가나/가타카나로 입력할 것.** 한자를 주면 낭독이 망가져
@@ -171,6 +172,22 @@ npx hyperframes tts "<문장>" -v jf_alpha -s 0.95 -o voice/01.wav
 자막은 한자, TTS 입력만 가나로 분리한다. 생성 후 각 파일 길이를 `ffprobe`로
 재서 자막 타이밍을 맞추고, 위의 나레이션 믹스 명령으로 합친다
 (amix 첫 입력은 반드시 BGM — 음성을 먼저 넣으면 영상이 음성 길이로 잘린다).
+
+**나레이션 길이가 티저를 늘리지 않게 할 것.** 문장이 길면 15초를 넘긴다 —
+자막 타이밍을 늘리기 전에 **나레이션 문장 자체를 짧게 다시 쓴다**
+(실측: 20음절이면 약 2.2초. 문장당 2~3초로 맞추면 5문장이 15초에 들어간다).
+
+## 밝은 그림일 때 자막 판독성
+
+수채화·파스텔처럼 배경이 밝으면 강조어 대비가 WCAG 3:1에 미달한다.
+spec에 다음을 넣으면 해결된다 (검증 완료):
+
+```json
+"cap_backdrop": 1.0,      // 하단 그라데이션 강화 + 강조어 뒤 어두운 판
+"em_color": "#ff6b6b"     // 어두운 판 위에 올리므로 밝은 붉은색이 더 잘 보인다
+```
+
+자막을 크게 요청받으면 `"cap_scale": 1.3` (자막·엔드카드 폰트 일괄 확대).
 
 ## 하지 말 것
 
