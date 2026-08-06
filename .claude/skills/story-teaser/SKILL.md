@@ -49,6 +49,34 @@ print(n, "장 추출")
 EOF
 ```
 
+세션에 이전 티저의 그림이 남아 있으면 다 뽑히니, **이번에 첨부된 마지막 N장만**
+쓴다 (`imgs[-4:]`). 추출 직후 `Read`로 한 장씩 보고 무엇이 그려졌는지 확인할 것.
+
+**그림에 글씨가 박혀 있는 경우** (썸네일용으로 만든 그림이면 흔하다):
+자막과 겹쳐 이중으로 보이므로 **글씨 띠를 잘라내고 16:9로 다시 만든다.**
+행별 밝은 픽셀 수로 글씨 띠 위치를 찾은 뒤 crop → Lanczos 확대 → 언샵으로 복원한다:
+
+```python
+from PIL import Image, ImageFilter
+im = Image.open("assets/img1.webp").convert("RGB").crop((x0, y0, x1, y1))  # 16:9 비율로
+im = im.resize((1920, 1080), Image.LANCZOS)
+im.filter(ImageFilter.UnsharpMask(radius=2, percent=55, threshold=3)).save("assets/img1_c.jpg", quality=95)
+```
+
+이렇게 만든 그림은 이미 1920×1080이므로 `source_size`를 `[1920, 1080]`,
+`focus`를 `0.5`로 둔다. 크롭 후 **반드시 `Read`로 확인** — 글씨 잔상이 위아래
+가장자리에 남기 쉽고, 인물 얼굴이 잘리기도 한다.
+
+**배경이 밝은 그림**(하늘·설경·흰 배경)은 흰 자막이 묻힌다. 그 그림에만
+하단 어둡기를 구워 넣는다 (다른 그림은 이미 어두우니 건드리지 말 것):
+
+```python
+import numpy as np
+a = np.asarray(im).astype(np.float32); h = a.shape[0]
+k = np.clip((np.arange(h, dtype=np.float32)/h - 0.40) / 0.50, 0, 1) ** 1.25
+Image.fromarray(np.clip(a * (1 - 0.72*k)[:, None, None], 0, 255).astype("uint8")).save(out, quality=95)
+```
+
 ### 2. 훅 선정 (가장 중요한 단계)
 
 대본을 읽고 **결말을 알려주지 않으면서 가장 궁금하게 만드는** 문장 3~4개를 뽑는다.
@@ -145,6 +173,17 @@ timeout 30 python3 <스킬경로>/scripts/make_voice.py spec.json --out voice
 `silencedetect`로 잰 **실제 발화 길이**로 할 것 — 15초 안에 4문장이 들어간다.
 문장이 길면 자막 두 줄을 다 읽히지 말고 **핵심 구절만** 따로 뽑아 합성한다
 (spec과 별개의 voice용 json을 만들어 `make_voice.py`에 넘기면 된다).
+
+**나레이션은 자막 `line2`(강조 줄)만 읽게 하는 것이 기본이다.** `line1`은 눈으로
+읽는 배경 설명, `line2`는 귀로 듣는 한 방 — 이렇게 나누면 4컷 + 엔드카드가
+15초에 정확히 들어간다. 다섯 문장이 모두 들어가야 하므로 길이 예산을 먼저 잡을 것:
+
+- 한국어 발화 길이 ≈ **글자수 × 0.20초**, 문장부호(쉼표·마침표)마다 **+0.4초**
+- 쉼표를 하나 지우면 0.4초가 빈다 — 길이가 모자랄 때 가장 먼저 손댈 곳
+- 발화 총합이 12초를 넘으면 숨 쉴 틈이 없다. 넘으면 문장을 더 줄인다
+  (실측 예: 13자 "그 강단 앞에서 쓰러졌습니다." → 2.57초)
+
+합성 → 측정 → **측정값에 맞춰 spec 타이밍을 정한다.** 반대 순서로 하지 말 것.
 
 **성공하면 (voice/ 에 mp3 생성됨) — 전자동 나레이션 믹스:**
 

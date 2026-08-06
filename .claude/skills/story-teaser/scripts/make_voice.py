@@ -67,7 +67,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("spec", nargs="?", help="spec.json 경로")
     ap.add_argument("--voice", default="ko-KR-InJoonNeural")
-    ap.add_argument("--rate", default="-8%", help="말 속도. 사연은 느린 쪽이 어울림")
+    # 주의: 값이 -로 시작하므로 반드시 --rate=-12% 형태로 넘길 것 (--rate -12%는 파싱 실패)
+    ap.add_argument("--rate", default="-8%",
+                    help="말 속도. 사연은 -8%%, 임사체험/설교 톤은 -12%% 정도가 어울림")
     ap.add_argument("--out", default="voice", help="출력 폴더 (기본 voice/)")
     ap.add_argument("--list", action="store_true", help="한국어 목소리 목록만 출력")
     a = ap.parse_args()
