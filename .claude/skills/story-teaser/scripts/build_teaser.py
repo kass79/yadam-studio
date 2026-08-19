@@ -45,6 +45,11 @@ STYLES = {
 
 def build(spec):
     st = STYLES[spec.get("style", "cinematic")]
+    # 자막 언어. 한자 글꼴이 언어마다 달라서(예: 直·骨의 자형) 맞는 자형을 써야 자연스럽다.
+    lang = spec.get("lang", "ko")
+    region = {"ko": "KR", "ja": "JP", "zh": "SC"}.get(lang, "KR")
+    if region != "KR":
+        st = dict(st, font=st["font"].replace("CJK KR", f"CJK {region}"))
     vertical = spec.get("aspect", "16:9") == "9:16"
     W, H = (1080, 1920) if vertical else (1920, 1080)
     dur = float(spec["duration"])
@@ -165,15 +170,15 @@ def build(spec):
       </section>''' if st["vignette"] else "")
 
     return f"""<!doctype html>
-<html lang="ko">
+<html lang="{lang}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width={W}, height={H}" />
     <title>{spec.get('title','하이라이트 티저')}</title>
     <script src="./node_modules/gsap/dist/gsap.min.js"></script>
     <style>
-      @font-face {{ font-family: "Noto Serif CJK KR"; src: local("Noto Serif CJK KR"); }}
-      @font-face {{ font-family: "Noto Sans CJK KR"; src: local("Noto Sans CJK KR"); }}
+      @font-face {{ font-family: "Noto Serif CJK {region}"; src: local("Noto Serif CJK {region}"); }}
+      @font-face {{ font-family: "Noto Sans CJK {region}"; src: local("Noto Sans CJK {region}"); }}
       * {{ margin: 0; padding: 0; box-sizing: border-box; }}
       html, body {{ width: {W}px; height: {H}px; overflow: hidden; background: #000;
         font-family: {st['font']}; }}
