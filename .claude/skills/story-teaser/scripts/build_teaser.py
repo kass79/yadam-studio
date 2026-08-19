@@ -230,6 +230,8 @@ def build(spec):
         <div id="bg-fill"></div>
       </section>
 
+      <audio id="bgm" src="bgm.wav" data-start="0" data-duration="{dur}" data-track-index="20" data-volume="1"></audio>
+
 {chr(10).join(shot_html)}
 
       <section id="endcard" class="clip" data-start="{end_start}" data-duration="{round(dur-end_start,2)}" data-track-index="9">

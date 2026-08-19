@@ -67,6 +67,15 @@ im.filter(ImageFilter.UnsharpMask(radius=2, percent=55, threshold=3)).save("asse
 `focus`를 `0.5`로 둔다. 크롭 후 **반드시 `Read`로 확인** — 글씨 잔상이 위아래
 가장자리에 남기 쉽고, 인물 얼굴이 잘리기도 한다.
 
+**글씨가 띠가 아니라 그림 곳곳에 흩어져 있으면** (도표형 썸네일 — 크롭 불가):
+cv2 인페인팅으로 글자만 지운다 (실측 2026-08, 지구단면 도표에서 성공):
+
+1. 글자 위치는 세로 띠를 잘라 눈금 그려 `Read`로 확인 후 상자 좌표를 잡는다
+2. 상자 안 밝은 픽셀(`gray > 205`)만 마스크 → `dilate(5×5)×2` → `cv2.inpaint(..., 6, INPAINT_TELEA)`
+3. 남은 얼룩은 `medianBlur(41)` 배경과의 차(>12) 마스크로 1~2회 더 지운다
+4. **상자 전체를 통째로 채우는 INPAINT_NS는 금지** — 밝은 줄무늬 사각형이 생긴다
+5. 옅은 잔광 얼룩은 완벽히 안 지워져도 된다 — 줌·그레인·어두운 그레이딩에 묻힌다
+
 **배경이 밝은 그림**(하늘·설경·흰 배경)은 흰 자막이 묻힌다. 그 그림에만
 하단 어둡기를 구워 넣는다 (다른 그림은 이미 어두우니 건드리지 말 것):
 
@@ -111,13 +120,17 @@ mkdir -p assets && cp <이미지들> assets/
 ```bash
 S=<이 스킬 경로>/scripts
 python3 $S/build_teaser.py spec.json > index.html
-python3 $S/make_bgm.py spec.json bgm.wav
+python3 $S/make_bgm.py spec.json bgm.wav    # build가 넣는 <audio src="bgm.wav">가 이 파일을 참조
 
 export PUPPETEER_EXECUTABLE_PATH=/opt/pw-browsers/chromium
 npx hyperframes check                       # 0 error 나올 때까지
 npx hyperframes snapshot --at 1.5,7.5,10.2  # 반드시 Read로 눈으로 확인
 npx hyperframes render                      # 3~5분 소요
 ```
+
+check가 `gsap_exit_missing_hard_kill` 오류를 내면: 어떤 자막의 끝(start+dur)이
+샷의 start와 0.1초 이내로 물려 있는 경우다. 자막 `dur`를 0.2초쯤 줄여서 띄운다
+(실측 2026-08). `overlapping_gsap_tweens`·`track_too_dense` 경고는 정상이다.
 
 **스냅샷을 반드시 `Read`로 직접 볼 것.** check가 통과해도 얼굴이 잘리거나
 자막이 인물을 가리는 건 잡히지 않는다.
