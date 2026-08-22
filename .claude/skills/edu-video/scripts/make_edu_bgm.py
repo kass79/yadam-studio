@@ -23,7 +23,8 @@ import wave
 
 import numpy as np
 
-SR = 44100
+from _instruments import SR, arpeggio, guitar_note, piano_note
+
 XFADE = 1.8  # 코드 사이 크로스페이드
 
 # 분위기(mood)별 코드 진행 + 음색. spec의 "mood" 필드로 고른다.
@@ -70,6 +71,29 @@ MOODS = {
         "gains": [0.5, 0.3, 0.2, 0.1],
         "sec": 10.0, "detune": 0.42, "harm": 0.22,  # 배음 → 현악기 같은 두께
     },
+    # ── 실제 악기 음색 (아르페지오) ─────────────────────────────
+    "guitar": {
+        "engine": "arp", "synth": "guitar",
+        "chords": [                                  # 클래식 기타 운지에 맞춘 보이싱
+            [110.00, 164.81, 220.00, 261.63, 329.63],  # Am
+            [87.31, 130.81, 174.61, 220.00, 261.63],   # F
+            [130.81, 164.81, 196.00, 261.63, 329.63],  # C
+            [98.00, 146.83, 196.00, 246.94, 293.66],   # G
+        ],
+        "pattern": [0, 2, 3, 4, 3, 2],               # p-i-m-a 핑거피킹
+        "note_sec": 0.42, "sec": 5.04, "ring": 2.6,
+    },
+    "piano": {
+        "engine": "arp", "synth": "piano",
+        "chords": [
+            [110.00, 164.81, 261.63, 329.63],          # Am
+            [87.31, 130.81, 220.00, 261.63],           # F
+            [130.81, 196.00, 261.63, 329.63],          # C
+            [98.00, 146.83, 246.94, 293.66],           # G
+        ],
+        "pattern": [0, 1, 2, 3, 2, 1],               # 왼손 베이스 → 오른손 펼침
+        "note_sec": 0.52, "sec": 6.24, "ring": 3.2,
+    },
 }
 
 
@@ -102,6 +126,15 @@ def main():
     if mood_name not in MOODS:
         raise SystemExit(f"모르는 mood: {mood_name} (가능: {', '.join(MOODS)})")
     M = MOODS[mood_name]
+
+    if M.get("engine") == "arp":
+        # 실제 악기를 한 음씩 뜯거나 치는 방식 (기타·피아노)
+        synth = {"guitar": guitar_note, "piano": piano_note}[M["synth"]]
+        sig = arpeggio(M["chords"], M["pattern"], M["note_sec"], M["sec"],
+                       dur, synth, ring=M["ring"])
+        sig = np.pad(sig, (0, max(0, n - len(sig))))[:n]
+        return finish(sig, spec, dur, n, t, mood_name, sys.argv[2])
+
     chords, gains = M["chords"], M["gains"]
     chord_sec, detune, harm = M["sec"], M["detune"], M["harm"]
 
@@ -134,8 +167,13 @@ def main():
         seg[i0:i1] = tone * env
         sig += seg
 
-    # 아주 느린 호흡감
+    # 아주 느린 호흡감 (패드 전용 — 악기 연주는 이미 강약이 있다)
     sig *= 0.8 + 0.2 * np.sin(2 * np.pi * t / 11.0)
+    return finish(sig, spec, dur, n, t, mood_name, sys.argv[2])
+
+
+def finish(sig, spec, dur, n, t, mood_name, out_path):
+    """구간 마스크를 씌우고 wav로 저장한다 (패드·악기 공통)."""
     sig = sig / (np.abs(sig).max() + 1e-9) * 0.5
 
     # 구간 마스크 — 지정 구간에서만 소리가 나고, 양끝은 부드럽게 드나든다
@@ -155,13 +193,13 @@ def main():
     sig *= mask
 
     pcm = (np.clip(sig, -1, 1) * 32767).astype("<i2")
-    with wave.open(sys.argv[2], "wb") as w:
+    with wave.open(out_path, "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
         w.setframerate(SR)
         w.writeframes(pcm.tobytes())
     desc = ", ".join(f"{a:.0f}~{b:.0f}s" for a, b in wins) or "음악 없음"
-    print(f"{sys.argv[2]} 생성 완료 ({dur}s) — 분위기: {mood_name}, 음악 구간: {desc}")
+    print(f"{out_path} 생성 완료 ({dur}s) — 분위기: {mood_name}, 음악 구간: {desc}")
 
 
 if __name__ == "__main__":
