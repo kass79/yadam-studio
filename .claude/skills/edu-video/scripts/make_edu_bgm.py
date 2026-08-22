@@ -24,17 +24,53 @@ import wave
 import numpy as np
 
 SR = 44100
-CHORD_SEC = 8.0
 XFADE = 1.8  # 코드 사이 크로스페이드
 
-# 코드별 구성음 (root, 3rd, 5th, octave) — 낮은 음역
-CHORDS = [
-    [130.81, 164.81, 196.00, 261.63],  # C
-    [110.00, 130.81, 164.81, 220.00],  # Am
-    [87.31, 110.00, 130.81, 174.61],   # F
-    [98.00, 123.47, 146.83, 196.00],   # G
-]
-GAINS = [0.5, 0.22, 0.3, 0.14]
+# 분위기(mood)별 코드 진행 + 음색. spec의 "mood" 필드로 고른다.
+#   warm    따뜻한 장조 — 일반 안내·수칙 교육용 (예전 기본값)
+#   solemn  차분한 단조 — 사고사례 교육에 어울림 (현재 기본값)
+#   minimal 지속음 하나 — 브리핑처럼 담백하게, 존재감 최소
+#   formal  낮고 두꺼운 화음 — 공식 발표 톤, 무게감
+MOODS = {
+    "warm": {
+        "chords": [
+            [130.81, 164.81, 196.00, 261.63],  # C
+            [110.00, 130.81, 164.81, 220.00],  # Am
+            [87.31, 110.00, 130.81, 174.61],   # F
+            [98.00, 123.47, 146.83, 196.00],   # G
+        ],
+        "gains": [0.5, 0.22, 0.3, 0.14],
+        "sec": 8.0, "detune": 0.35, "harm": 0.0,
+    },
+    "solemn": {
+        "chords": [
+            [110.00, 130.81, 164.81, 220.00],  # Am
+            [87.31, 110.00, 130.81, 174.61],   # F
+            [73.42, 87.31, 110.00, 146.83],    # Dm
+            [82.41, 98.00, 123.47, 164.81],    # Em
+        ],
+        "gains": [0.52, 0.24, 0.28, 0.12],
+        "sec": 9.0, "detune": 0.30, "harm": 0.0,
+    },
+    "minimal": {
+        "chords": [
+            [98.00, 146.83, 196.00, 293.66],   # G 드론 (근음+5도+옥타브)
+            [98.00, 146.83, 196.00, 261.63],   # 위 음만 살짝 이동
+        ],
+        "gains": [0.55, 0.26, 0.14, 0.06],
+        "sec": 14.0, "detune": 0.18, "harm": 0.0,
+    },
+    "formal": {
+        "chords": [
+            [65.41, 98.00, 130.81, 196.00],    # C 낮게
+            [73.42, 110.00, 146.83, 220.00],   # D 낮게
+            [87.31, 130.81, 174.61, 261.63],   # F 낮게
+            [82.41, 123.47, 164.81, 246.94],   # E 낮게
+        ],
+        "gains": [0.5, 0.3, 0.2, 0.1],
+        "sec": 10.0, "detune": 0.42, "harm": 0.22,  # 배음 → 현악기 같은 두께
+    },
+}
 
 
 def music_windows(spec, dur):
@@ -62,16 +98,23 @@ def main():
     t = np.arange(n) / SR
     sig = np.zeros(n)
 
-    n_seg = int(np.ceil(dur / CHORD_SEC)) + 1
+    mood_name = spec.get("mood", "solemn")
+    if mood_name not in MOODS:
+        raise SystemExit(f"모르는 mood: {mood_name} (가능: {', '.join(MOODS)})")
+    M = MOODS[mood_name]
+    chords, gains = M["chords"], M["gains"]
+    chord_sec, detune, harm = M["sec"], M["detune"], M["harm"]
+
+    n_seg = int(np.ceil(dur / chord_sec)) + 1
     for k in range(n_seg):
-        t0 = k * CHORD_SEC
+        t0 = k * chord_sec
         if t0 >= dur:
             break
-        freqs = CHORDS[k % len(CHORDS)]
+        freqs = chords[k % len(chords)]
         # 세그먼트 엔벨로프: 크로스페이드 램프 (양끝 겹침)
         seg = np.zeros(n)
         i0 = max(0, int((t0 - XFADE) * SR))
-        i1 = min(n, int((t0 + CHORD_SEC) * SR))
+        i1 = min(n, int((t0 + chord_sec) * SR))
         if i1 <= i0:
             continue
         m = i1 - i0
@@ -82,9 +125,12 @@ def main():
             env[-ramp:] = np.linspace(1, 0, ramp)
         tt = t[i0:i1]
         tone = np.zeros(m)
-        for f, g in zip(freqs, GAINS):
+        for f, g in zip(freqs, gains):
             tone += np.sin(2 * np.pi * f * tt) * g
-            tone += np.sin(2 * np.pi * (f * 1.003) * tt) * g * 0.35  # 살짝 디튠 (풍성함)
+            tone += np.sin(2 * np.pi * (f * 1.003) * tt) * g * detune  # 살짝 디튠 (풍성함)
+            if harm:  # 홀수 배음 — 현악기 같은 두께
+                tone += np.sin(2 * np.pi * (f * 3) * tt) * g * harm * 0.5
+                tone += np.sin(2 * np.pi * (f * 5) * tt) * g * harm * 0.2
         seg[i0:i1] = tone * env
         sig += seg
 
@@ -115,7 +161,7 @@ def main():
         w.setframerate(SR)
         w.writeframes(pcm.tobytes())
     desc = ", ".join(f"{a:.0f}~{b:.0f}s" for a, b in wins) or "음악 없음"
-    print(f"{sys.argv[2]} 생성 완료 ({dur}s) — 음악 구간: {desc}")
+    print(f"{sys.argv[2]} 생성 완료 ({dur}s) — 분위기: {mood_name}, 음악 구간: {desc}")
 
 
 if __name__ == "__main__":
