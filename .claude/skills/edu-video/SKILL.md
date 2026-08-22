@@ -38,9 +38,13 @@ description: 안전교육 자료(운전정보 공문 사진, 사고사례, 수�
 npx hyperframes init edu --non-interactive --example=blank && cd edu && npm install gsap --silent
 ```
 
-`edu_spec.json`: `{"title", "duration", "accent", "slides":[...]}`.
+`edu_spec.json`: `{"title", "duration", "accent", "docref", "slides":[...]}`.
 슬라이드 필드는 `scripts/build_edu.py` 상단 주석 참고. `accent` 기본값은
 2호선 초록(#00A84D) — 노선이 다른 사례면 해당 노선 색으로.
+`docref`에 문서번호(예: `"운전정보 2026-14"`)를 넣으면 내용 슬라이드 오른쪽 위에
+작은 라벨로 계속 떠 있는다 — 어느 공문 기반인지 영상 중간부터 봐도 알 수 있다.
+소제목(`heading`)에는 번호(01·02…)가 자동으로 붙고, 같은 소제목이 여러 슬라이드로
+이어지면 번호를 공유한다.
 
 ### 4. 나레이션 먼저 → 타이밍 확정 (티저와 같은 원칙)
 
@@ -58,11 +62,25 @@ silencedetect로 실제 발화 길이 재고 → **슬라이드 dur = 발화 + 1
 ```bash
 S=<이 스킬 경로>/scripts
 python3 $S/build_edu.py edu_spec.json > index.html
-python3 $S/make_edu_bgm.py edu_spec.json bgm.wav
+python3 $S/make_edu_bgm.py edu_spec.json bgm.wav   # 코드 진행 패드 (노이즈 없음)
+python3 $S/make_edu_sfx.py edu_spec.json sfx.wav   # 전환음·항목음·마무리 차임
 npx hyperframes check && npx hyperframes snapshot --at <슬라이드 중간들>  # Read로 눈검수
 npx hyperframes render
-# 믹스: BGM 0.30, 나레이션 adelay 배치 — 명령은 story-teaser SKILL.md와 동일 패턴
+# 믹스: 나레이션 + BGM 0.30 + SFX 1.0 (SFX는 이미 작게 만들어져 있으므로 감쇠 불필요)
 ```
+
+**소리 3층 구조** (2026-08 카스 피드백 반영):
+
+| 층 | 파일 | 성격 | 믹스 볼륨 |
+|---|---|---|---|
+| 나레이션 | voice/*.mp3 | 주인공 | 1.0 (adelay 배치) |
+| 배경음악 | bgm.wav | C→Am→F→G 8초 순환 패드 | 0.30 |
+| 효과음 | sfx.wav | 전환 스윕·항목 톡·마무리 차임 | 1.0 |
+
+- **노이즈 계열 금지.** 이전 버전이 '공기감'으로 넣은 갈색 노이즈가 잡음으로 들렸다.
+  질감이 필요하면 노이즈가 아니라 **화음/디튠**으로 만든다.
+- 효과음은 `mean_volume ≈ -35dB`가 기준. 이보다 크면 교육 내용을 방해한다.
+- 검증: `ffmpeg -ss <조용한 지점> -t 0.5 -i sfx.wav -af volumedetect` → 무음(-90dB대)이면 정상 배치.
 
 30MB 넘으면 `-crf 23`으로 재인코딩 (카드 영상이라 화질 손실 거의 없음).
 완성본은 SendUserFile로 보내고, 카스가 앱 글쓰기 → 교육영상 카테고리에 첨부한다.

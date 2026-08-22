@@ -35,6 +35,17 @@ def build(spec):
     dur = float(spec["duration"])
     accent = spec.get("accent", ACCENT_DEFAULT)
     slides = spec["slides"]
+    # 내용 슬라이드 오른쪽 위에 계속 떠 있는 작은 출처 라벨 (공문 느낌)
+    docref = esc(spec.get("docref", ""))
+
+    # 소제목에 붙는 일련번호 — 같은 heading이 여러 슬라이드로 이어지면 번호를 공유한다
+    sec_no, seen = {}, {}
+    for idx, s in enumerate(slides):
+        if s["type"] in ("text", "rules", "steps"):
+            h = s.get("heading", "")
+            if h not in seen:
+                seen[h] = len(seen) + 1
+            sec_no[idx] = seen[h]
 
     html, tl = [], []
     for i, s in enumerate(slides, 1):
@@ -42,6 +53,15 @@ def build(spec):
         d = float(s["dur"])
         trk = 1 if i % 2 else 2
         typ = s["type"]
+
+        # 내용 슬라이드 공통: 번호 붙은 소제목 + 오른쪽 위 출처 라벨
+        if typ in ("text", "rules", "steps"):
+            no = f'<span class="no">{sec_no[i-1]:02d}</span>'
+            head = (f'<div class="head"><span class="bar"></span>{no}'
+                    f'{esc(s.get("heading",""))}</div>')
+            tag = f'<div class="docref">{docref}</div>' if docref else ""
+        else:
+            head = tag = ""
 
         if typ == "title":
             lines = "".join(f'<div class="t-line">{esc(x)}</div>' for x in s.get("lines", []))
@@ -53,8 +73,7 @@ def build(spec):
             lines = "".join(
                 f'<div class="x-line">{em_span(l.get("t",""), l.get("em"))}</div>'
                 for l in s.get("lines", []))
-            inner = (f'<div class="head"><span class="bar"></span>{esc(s.get("heading",""))}</div>'
-                     f'<div class="x-wrap">{lines}</div>')
+            inner = f'{tag}{head}<div class="x-wrap">{lines}</div>'
             cls = "sl-text"
         elif typ == "rules":
             items = "".join(
@@ -63,8 +82,7 @@ def build(spec):
                 + (f'<div class="r-sub">{esc(it["sub"])}</div>' if it.get("sub") else "")
                 + "</div>"
                 for it in s.get("items", []))
-            inner = (f'<div class="head"><span class="bar"></span>{esc(s.get("heading",""))}</div>'
-                     f'<div class="r-wrap">{items}</div>')
+            inner = f'{tag}{head}<div class="r-wrap">{items}</div>'
             cls = "sl-rules"
         elif typ == "steps":
             parts = []
@@ -75,8 +93,7 @@ def build(spec):
                              f'<div class="s-main">{esc(it.get("main",""))}</div>'
                              + (f'<div class="s-sub">{esc(it["sub"])}</div>' if it.get("sub") else "")
                              + "</div>")
-            inner = (f'<div class="head"><span class="bar"></span>{esc(s.get("heading",""))}</div>'
-                     f'<div class="s-wrap">{"".join(parts)}</div>')
+            inner = f'{tag}{head}<div class="s-wrap">{"".join(parts)}</div>'
             cls = "sl-steps"
         elif typ == "end":
             inner = (f'<div class="e-line1">{esc(s.get("line1",""))}</div>'
@@ -124,6 +141,10 @@ def build(spec):
         else:
             tl.append(f'      tl.fromTo("#f{i} .head", {{ x: -26, autoAlpha: 0 }}, '
                       f'{{ x: 0, autoAlpha: 1, duration: 0.5, ease: "power2.out" }}, {a0});')
+            if docref:
+                tl.append(f'      tl.fromTo("#f{i} .docref", {{ autoAlpha: 0 }}, '
+                          f'{{ autoAlpha: 1, duration: 0.5, ease: "power1.out" }}, '
+                          f'{round(a0+0.15,2)});')
             item_sel = {"text": ".x-line", "rules": ".r-card", "steps": ".s-box"}[typ]
             stag = {"text": 0.28, "rules": 0.4, "steps": 0.4}[typ]
             tl.append(f'      tl.fromTo("#f{i} {item_sel}", {{ y: 26, autoAlpha: 0 }}, '
@@ -166,6 +187,12 @@ def build(spec):
         font-weight: 800; color: {FG}; letter-spacing: 2px; margin-bottom: 58px; }}
       .head .bar {{ display: inline-block; width: 12px; height: 46px;
         background: {accent}; border-radius: 3px; }}
+      .head .no {{ font-size: 34px; font-weight: 900; color: {accent};
+        letter-spacing: 1px; margin-right: -8px; }}
+      .docref {{ position: absolute; top: 62px; right: 90px; font-size: 24px;
+        font-weight: 600; color: {SUB}; letter-spacing: 3px; opacity: 0.85;
+        border: 1px solid rgba(255,255,255,0.18); border-radius: 999px;
+        padding: 9px 24px; }}
       .em {{ color: {EM}; font-weight: 900; }}
 
       .sl-title {{ align-items: center; text-align: center; }}
@@ -208,6 +235,7 @@ def build(spec):
       </section>
 
       <audio id="bgm" src="bgm.wav" data-start="0" data-duration="{dur}" data-track-index="20" data-volume="1"></audio>
+      <audio id="sfx" src="sfx.wav" data-start="0" data-duration="{dur}" data-track-index="21" data-volume="1"></audio>
 
 {chr(10).join(html)}
 
