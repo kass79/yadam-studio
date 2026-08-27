@@ -62,6 +62,29 @@ python3 <story-teaser>/scripts/make_voice.py voice.json --voice ko-KR-InJoonNeur
 silencedetect로 실제 발화 길이 재고 → **슬라이드 dur = 발화 + 1.5~2초**로 확정.
 슬라이드 시작 +0.4초에 나레이션 배치 (adelay = start×1000 + 400).
 
+⚠ **`silence_start`를 그냥 `tail -1`로 받으면 안 된다** (실측 2026-08 사고).
+쉼표·물음표가 든 문장은 **중간 쉼**도 무음으로 잡혀서, 마지막 무음이 꼬리가 아니라
+문장 한가운데일 수 있다. 실제로 4.2초짜리를 1.1초로 재서 타이밍이 통째로 어긋났다.
+**꼬리 무음일 때만 인정한다** — 무음 구간이 파일 끝까지 이어지는지 확인:
+
+```python
+def speech_len(p):
+    dur = float(ffprobe_duration(p))
+    starts = re.findall(r"silence_start: ([\d.]+)", silencedetect_output)
+    ends   = re.findall(r"silence_end: ([\d.]+)", silencedetect_output)
+    # 무음이 열린 채 파일이 끝났거나(닫는 end 없음), 마지막 end가 곧 파일 끝이면 꼬리다
+    if starts and (len(ends) < len(starts) or abs(float(ends[-1]) - dur) < 0.05):
+        return float(starts[-1])
+    return dur     # 꼬리 무음이 없으면 끝까지가 발화
+```
+
+## 쇼츠(9:16) 만들기
+
+`aspect: "9:16"`이면 캔버스가 1080×1920이 되고 여백·글자 크기가 폰 기준으로 자동 조정된다
+(가로 여백 170→70px, 본문 58→62px, `steps` 카드가 가로줄→**세로 쌓기**로 바뀐다).
+빠른 템포를 원하면 나레이션 `--rate=+8%` 정도, 장면 여유는 0.5초만 준다
+(교육용 기본 1.5~2초는 쇼츠에선 늘어진다).
+
 ### 5. 생성 → 검증 → 렌더 → 믹스
 
 ```bash

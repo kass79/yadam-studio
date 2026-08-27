@@ -31,7 +31,8 @@ def em_span(text, em):
 
 
 def build(spec):
-    W, H = 1920, 1080
+    vertical = spec.get("aspect", "16:9") == "9:16"
+    W, H = (1080, 1920) if vertical else (1920, 1080)
     dur = float(spec["duration"])
     accent = spec.get("accent", ACCENT_DEFAULT)
     slides = spec["slides"]
@@ -159,6 +160,22 @@ def build(spec):
     tl.append(f'      tl.fromTo("#bar-i", {{ width: 0 }}, {{ width: {W}, '
               f'duration: {dur}, ease: "none" }}, 0);')
 
+    # 세로(쇼츠)는 가로 여백을 줄이고 글자를 키운다 — 폰에서 손가락만 한 글씨로 읽힌다
+    if vertical:
+        PAD, HEAD_FS, BAR_H = 70, 52, 56
+        T_LINE, T_KICK, T_SUB = 86, 34, 34
+        X_LINE = 62
+        R_MAIN, R_SUB, R_PAD = 52, 34, "30px 34px"
+        S_DIR, S_MAIN, S_SUB = "column", 46, 30
+        E_L1, E_L2, E_CTA = 46, 88, 30
+    else:
+        PAD, HEAD_FS, BAR_H = 170, 44, 46
+        T_LINE, T_KICK, T_SUB = 92, 32, 34
+        X_LINE = 58
+        R_MAIN, R_SUB, R_PAD = 47, 31, "30px 40px"
+        S_DIR, S_MAIN, S_SUB = "row", 44, 26
+        E_L1, E_L2, E_CTA = 50, 96, 30
+
     return f"""<!doctype html>
 <html lang="ko">
   <head>
@@ -181,11 +198,11 @@ def build(spec):
 
       .fade {{ position: absolute; inset: 0; }}
       .slide {{ display: flex; flex-direction: column; justify-content: center;
-        padding: 0 170px; }}
+        padding: 0 {PAD}px; }}
 
-      .head {{ display: flex; align-items: center; gap: 22px; font-size: 44px;
-        font-weight: 800; color: {FG}; letter-spacing: 2px; margin-bottom: 58px; }}
-      .head .bar {{ display: inline-block; width: 12px; height: 46px;
+      .head {{ display: flex; align-items: center; gap: 20px; font-size: {HEAD_FS}px;
+        font-weight: 800; color: {FG}; letter-spacing: 2px; margin-bottom: 48px; }}
+      .head .bar {{ display: inline-block; width: 12px; height: {BAR_H}px;
         background: {accent}; border-radius: 3px; }}
       .head .no {{ font-size: 34px; font-weight: 900; color: {accent};
         letter-spacing: 1px; margin-right: -8px; }}
@@ -196,34 +213,34 @@ def build(spec):
       .em {{ color: {EM}; font-weight: 900; }}
 
       .sl-title {{ align-items: center; text-align: center; }}
-      .t-kicker {{ font-size: 32px; font-weight: 700; color: {accent};
+      .t-kicker {{ font-size: {T_KICK}px; font-weight: 700; color: {accent};
         letter-spacing: 7px; margin-bottom: 46px; }}
       .t-title {{ margin-bottom: 46px; }}
-      .t-line {{ font-size: 92px; font-weight: 900; color: {FG}; line-height: 1.32; }}
-      .t-sub {{ font-size: 34px; color: {SUB}; letter-spacing: 4px; }}
+      .t-line {{ font-size: {T_LINE}px; font-weight: 900; color: {FG}; line-height: 1.32; }}
+      .t-sub {{ font-size: {T_SUB}px; color: {SUB}; letter-spacing: 4px; }}
 
       .x-wrap {{ display: flex; flex-direction: column; gap: 40px; }}
-      .x-line {{ font-size: 58px; font-weight: 800; color: {FG}; line-height: 1.45; }}
+      .x-line {{ font-size: {X_LINE}px; font-weight: 800; color: {FG}; line-height: 1.45; }}
 
       .r-wrap {{ display: flex; flex-direction: column; gap: 30px; }}
       .r-card {{ background: rgba(255,255,255,0.055); border-left: 8px solid {accent};
-        border-radius: 14px; padding: 30px 40px; }}
-      .r-main {{ font-size: 47px; font-weight: 800; color: {FG}; line-height: 1.4; }}
-      .r-sub {{ font-size: 31px; color: {SUB}; margin-top: 12px; line-height: 1.5; }}
+        border-radius: 14px; padding: {R_PAD}; }}
+      .r-main {{ font-size: {R_MAIN}px; font-weight: 800; color: {FG}; line-height: 1.4; }}
+      .r-sub {{ font-size: {R_SUB}px; color: {SUB}; margin-top: 12px; line-height: 1.5; }}
 
-      .s-wrap {{ display: flex; align-items: stretch; gap: 20px; }}
+      .s-wrap {{ display: flex; flex-direction: {S_DIR}; align-items: stretch; gap: 18px; }}
       .s-box {{ flex: 1; background: rgba(255,255,255,0.055); border-top: 6px solid {accent};
         border-radius: 14px; padding: 34px 18px; display: flex; flex-direction: column;
         align-items: center; justify-content: center; gap: 14px; text-align: center; }}
-      .s-main {{ font-size: 44px; font-weight: 900; color: {FG}; }}
-      .s-sub {{ font-size: 26px; color: {SUB}; line-height: 1.4; }}
+      .s-main {{ font-size: {S_MAIN}px; font-weight: 900; color: {FG}; }}
+      .s-sub {{ font-size: {S_SUB}px; color: {SUB}; line-height: 1.4; }}
       .s-arrow {{ align-self: center; font-size: 44px; color: {accent}; font-weight: 900; }}
 
       .sl-end {{ align-items: center; text-align: center; gap: 40px; }}
-      .e-line1 {{ font-size: 50px; font-weight: 700; color: {SUB}; }}
-      .e-line2 {{ font-size: 96px; font-weight: 900; color: {FG}; line-height: 1.35; }}
+      .e-line1 {{ font-size: {E_L1}px; font-weight: 700; color: {SUB}; }}
+      .e-line2 {{ font-size: {E_L2}px; font-weight: 900; color: {FG}; line-height: 1.35; }}
       .e-line2 .em {{ color: {accent}; }}
-      .e-cta {{ font-size: 30px; color: {SUB}; letter-spacing: 8px; margin-top: 14px; }}
+      .e-cta {{ font-size: {E_CTA}px; color: {SUB}; letter-spacing: 8px; margin-top: 14px; }}
     </style>
   </head>
   <body>
