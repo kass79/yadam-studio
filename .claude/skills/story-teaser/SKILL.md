@@ -242,7 +242,7 @@ ffmpeg -y -i renders/<렌더>.mp4 \
   -i bgm.wav -filter_complex "\
 [1:a]adelay=400|400[v1];[2:a]adelay=3500|3500[v2];[3:a]adelay=6500|6500[v3];\
 [4:a]adelay=9400|9400[v4];[5:a]adelay=11800|11800[v5];\
-[6:a]volume=0.32[b];[v1][v2][v3][v4][v5][b]amix=inputs=6:duration=longest:normalize=0[a]" \
+[6:a]volume=0.32[b];[v1][v2][v3][v4][v5][b]amix=inputs=6:duration=longest:normalize=0,aformat=channel_layouts=stereo[a]" \
   -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -shortest 최종.mp4
 ```
 (adelay 값 = 각 자막 start × 1000ms. spec이 바뀌면 같이 바꿀 것.
@@ -255,6 +255,46 @@ TTS 안 된다고 반복해 알리지 말 것. 사용자가 음성을 원할 때
 Network access → Custom에 `speech.platform.bing.com` 추가(새 세션부터 적용)를
 안내하거나, 카스 PC에서 `scripts/make_voice.py`를 돌려 mp3를 받는다.
 (참고: `hyperframes tts`의 Kokoro 모델은 한국어 미지원이라 대안이 못 된다)
+
+## 일본어 콘텐츠 (두 창에서 각각 검증 — 합친 결론)
+
+- 자막 글꼴은 **`"lang": "ja"` 한 줄**이면 된다 (위 「자막 언어」 참고). 예전 방식인
+  `"font": "\"Noto Serif CJK JP\", serif"` 직접 지정도 여전히 통하지만 lang이 더 간단하다.
+- 나레이션 **1순위: edge-tts `ja-JP-KeitaNeural` (`--rate=-10%`)** — 이 세션에서 일본어 티저
+  4편을 이 목소리로 냈고 한자 그대로 넣어도 정확히 읽는다. 단, 네트워크 허용이 필요하다.
+- **edge-tts가 막혀 있을 때의 오프라인 대안: 내장 Kokoro** (네트워크 불필요):
+
+```bash
+pip install --break-system-packages -q kokoro-onnx soundfile
+npx hyperframes tts "<문장>" -v jm_kumo -s 0.9 -o voice/01.wav   # 남성
+npx hyperframes tts "<문장>" -v jf_alpha -s 0.95 -o voice/01.wav # 여성
+```
+
+  ⚠️ Kokoro에는 **반드시 히라가나/가타카나로 입력할 것.** 한자를 주면 낭독이 망가져
+  5배쯤 길어진다 (실측: 같은 문장이 한자 24초 vs 가나 2.7초). 자막은 한자, TTS 입력만
+  가나로 분리한다. (edge-tts는 이 문제가 없다.)
+
+**나레이션 길이가 티저를 늘리지 않게 할 것.** 문장이 길면 15초를 넘긴다 —
+자막 타이밍을 늘리기 전에 **나레이션 문장 자체를 짧게 다시 쓴다**
+(실측: 20음절이면 약 2.2초. 문장당 2~3초로 맞추면 5문장이 15초에 들어간다).
+믹스는 위 명령대로 `duration=longest` + `-shortest`를 쓰면 입력 순서에 안 흔들린다.
+
+## 밝은 그림일 때 자막 판독성
+
+수채화·파스텔처럼 배경이 밝으면 강조어 대비가 WCAG 3:1에 미달한다.
+spec에 다음을 넣으면 해결된다 (검증 완료):
+
+```json
+"cap_backdrop": 1.0,      // 하단 그라데이션 강화 + 강조어 뒤 어두운 판
+"em_color": "#ff6b6b"     // 어두운 판 위에 올리므로 밝은 붉은색이 더 잘 보인다
+```
+
+두 가지 길이 있다 — 그림에 하단 어둡기를 **구워 넣는 방법**(위 「소재 확보」, 밝기 80 기준으로
+수치 검증 가능)과, spec에 `cap_backdrop`만 넣는 **빠른 방법**. 급하면 후자, 그림별로 정밀하게
+맞추려면 전자. `cap_backdrop`을 안 쓰면(0) 예전 룩과 완전히 같다.
+
+자막 크기는 기본값이 이미 74px(큰 자막)이라 `cap_scale`은 보통 건드리지 않는다.
+더 키워 달라면 `"cap_scale": 1.15` 정도 — 1.3은 두 줄이 화면을 넘칠 수 있다.
 
 ## 하지 말 것
 
