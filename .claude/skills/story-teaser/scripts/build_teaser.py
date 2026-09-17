@@ -94,9 +94,27 @@ def build(spec):
             f'data-duration="{s["dur"]}" data-track-index="{trk}" data-layout-allow-overflow>\n'
             f'        <div class="fade" id="f{i}"><img class="kb" id="kb{i}" '
             f'src="./assets/{s["image"]}" alt="" /></div>\n      </section>')
-        a, b = (1.02, 1.16) if s.get("zoom", "in") == "in" else (1.16, 1.02)
-        tl.append(f'      tl.fromTo("#kb{i}", {{ scale: {a} }}, '
-                  f'{{ scale: {b}, duration: {s["dur"]}, ease: "none" }}, {s["start"]});')
+        # 줌 폭: spec의 zoom_amt(기본 0.14)로 조절. 0.22쯤이면 확실히 밀려드는 느낌.
+        amt = float(s.get("zoom_amt", spec.get("zoom_amt", 0.14)))
+        base = float(s.get("zoom_base", spec.get("zoom_base", 1.02)))
+        a, b = ((base, base + amt) if s.get("zoom", "in") == "in"
+                else (base + amt, base))
+        # 팬: "left"|"right"면 확대된 여백만큼 가로로 훑는다. 스케일이 1보다 클 때만
+        # 이동 여유가 생기므로, 여유의 절반까지만 써서 검은 띠가 절대 안 생기게 한다.
+        pan = s.get("pan")
+        if pan in ("left", "right"):
+            # 확대 기준점(focus)이 중앙이 아니면 좌우 여유가 다르다. 좁은 쪽에 맞춰야
+            # 어느 순간에도 가장자리에 검은 띠가 안 생긴다.
+            f = float(s.get("focus", 0.5))
+            smin = min(base, base + amt)
+            px = round(W * min(f, 1 - f) * (smin - 1.0) * 0.9, 1)   # 좁은 쪽 여유의 90%
+            x0, x1 = (px, -px) if pan == "left" else (-px, px)
+            tl.append(f'      tl.fromTo("#kb{i}", {{ scale: {a}, x: {x0} }}, '
+                      f'{{ scale: {b}, x: {x1}, duration: {s["dur"]}, ease: "none" }}, '
+                      f'{s["start"]});')
+        else:
+            tl.append(f'      tl.fromTo("#kb{i}", {{ scale: {a} }}, '
+                      f'{{ scale: {b}, duration: {s["dur"]}, ease: "none" }}, {s["start"]});')
         if i > 1:  # 크로스페이드 진입
             tl.append(f'      tl.fromTo("#f{i}", {{ opacity: 0 }}, '
                       f'{{ opacity: 1, duration: 0.6, ease: "power1.inOut" }}, {s["start"]});')
