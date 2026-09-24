@@ -54,6 +54,8 @@ def build(spec):
     em_color = spec.get("em_color", st["em_color"])   # 밝은 그림이면 더 진한 색으로 덮어쓰기
     # cap_backdrop: 0(기본)이면 예전과 완전히 같고, 1.0이면 하단 그라데이션 강화 + 강조어 뒤 어두운 판
     backdrop = float(spec.get("cap_backdrop", 0.0))
+    # 뒤판이 없는데 좌우 여백만 남으면 "한마디 를"처럼 조사가 띄어져 보인다 (실측 2026-09)
+    em_pad = "0 .14em" if backdrop > 0 else "0"
     vertical = spec.get("aspect", "16:9") == "9:16"
     W, H = (1080, 1920) if vertical else (1920, 1080)
     dur = float(spec["duration"])
@@ -230,7 +232,7 @@ def build(spec):
         transform-origin: left center;  /* 팝 확대가 오른쪽으로만 — 앞 단어와 안 겹침 */
         /* 강조어 뒤 어두운 판 — cap_backdrop이 0이면 투명(기존 룩), 1.0이면 72% 검정 */
         background: rgba(0,0,0,{backdrop * 0.72:.2f});
-        padding: 0 .14em; border-radius: .08em; }}
+        padding: {em_pad}; border-radius: .08em; }}
 
       #vig-i {{ position: absolute; inset: 0; background: {vig}
         rgba(0,0,0,0) 40%, rgba(0,0,0,.38) 74%, rgba(0,0,0,.82) 100%); }}
