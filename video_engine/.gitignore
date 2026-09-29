@@ -1,0 +1,8 @@
+# 렌더 결과·작업 폴더·데모 소스(명령으로 다시 만듦)
+_work/
+out/
+examples/assets/
+config.yaml
+__pycache__/
+*.pyc
+.pytest_cache/

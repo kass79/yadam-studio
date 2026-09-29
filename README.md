@@ -19,6 +19,7 @@ Claude 세션을 이 저장소로 열면 아래 자동화들이 바로 장착됩
 |---|---|
 | `.claude/skills/story-teaser` | ⭐ "티저 만들어줘" 자동화 — 대본+그림 → 6~15초 티저 MP4 |
 | `.claude/skills/auto-edit` | 화면 녹화 + 얼굴 촬영 폴더 → 자동 편집 (템플릿 기반) |
+| `video_engine/` | 🆕 공용 편집 엔진 — 매니페스트(YAML) → 본편 mp4+srt / 쇼츠. 부아콤·조용한 채널 프리셋 ([설명서](video_engine/README.md)) |
 | `.claude/skills/watch` | 영상 분석 — 유튜브 링크/영상 파일을 프레임+자막으로 분석 |
 | `7_threads_auto/` | Threads 자동 포스팅 도구 (윈도우 PC에서 실행) |
 | `HYPERFRAMES_설치가이드.md` | HTML→영상 렌더링 도구 설치법 (윈도우/비개발자용) |
