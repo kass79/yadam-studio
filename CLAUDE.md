@@ -14,6 +14,13 @@
 대본 + 이미지가 첨부되면 `.claude/skills/story-teaser/SKILL.md`를 따른다.
 스킬의 검증 절차(check → snapshot을 눈으로 확인 → render)를 생략하지 말 것.
 
+## 공용 편집 엔진: video_engine/
+
+부아콤(숏폼 코미디)·조용한 채널이 같이 쓰는 매니페스트 기반 편집 엔진. 설명서는 `video_engine/README.md`.
+- 효과 추가 = `video_engine/effects/`에 `@effect` 함수 하나. 전환은 `transitions.py`.
+- 수정 후 `python -m pytest video_engine/tests -q` 통과 확인, 그리고 `snapshot`으로 눈검수 후 render.
+- 클라우드 검증은 `python -m video_engine demo-assets` 로 가짜 소스를 만들어서 한다.
+
 ## 환경 사정 (실측 확인된 것)
 
 - 이 클라우드 환경은 이그레스 정책이 있다. TTS(edge-tts)는

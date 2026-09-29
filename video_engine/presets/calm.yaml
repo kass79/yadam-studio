@@ -1,0 +1,64 @@
+# 조용한 채널용 (예수님말씀 · 임사체험 · 한밤야담)
+# 효과 최소, 부드러운 페이드, 하단 자막, 느린 켄번즈.
+# 매니페스트에 개그 효과가 적혀 있어도 여기서 꺼져 있으면 자동으로 건너뛴다.
+name: calm
+description: 조용한 롱폼 — 느린 켄번즈, 크로스페이드, 차분한 하단 자막
+
+timing:
+  insert_duration: 4.5
+  lead: 0.4
+  tail: 0.8
+  min_cut: 2.5
+  max_still_hold: 20
+  target_avg_cut: [3.5, 12]
+
+camera:
+  focus: [0.5, 0.45]
+
+subtitle:
+  font: regular
+  size: 50
+  color: "#F5F2EA"
+  stroke: "#000000"
+  stroke_width: 3
+  shadow: 3
+  emphasis_color: "#F3D98B"
+  dialect_color: "#F3D98B"
+  position: bottom
+  margin: 80
+  max_chars: 28
+  fade: 0.3
+
+auto_effects:
+  still: [kenburns]
+  vo: []
+
+effects:
+  kenburns:       {enabled: true, zoom: 0.05, ease: smooth, reframe_every: 0}
+  punch_zoom:     {enabled: false}
+  vo_cloud:       {enabled: false}
+  fantasy:        {enabled: false}
+  dialect_note:   {enabled: true}
+  freeze_sticker: {enabled: false}
+  orom_sil:       {enabled: false}
+  assa_gaori:     {enabled: false}
+  wall_voice:     {enabled: true, echo: true}
+  brake_scratch:  {enabled: false}
+
+transition_default: {type: fade, duration: 0.8}
+transitions:
+  fade: {duration: 0.8}
+  dip: {duration: 1.0}
+
+audio:
+  target_lufs: -14
+  normalize: dialogue
+  bgm_lufs: -30
+  duck: {threshold: 0.03, ratio: 4, attack: 40, release: 900}
+
+shorts:
+  size: [1080, 1920]
+  loop: 0.6
+  hook_hold: 1.5
+  hook: {size: 64, color: "#FFFFFF", stroke: "#000000", stroke_width: 4, box: "#000000A0", y: 0.14, font: main}
+  subtitle: {size: 58, position: lower_third, y: 0.74, max_chars: 14}

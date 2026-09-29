@@ -1,0 +1,113 @@
+# 부아콤 1화 앞부분 흉내 (10컷) — 가짜 테스트 소스로 엔진 전체 기능을 한 번씩 써보는 데모
+# 소스 만들기:  python -m video_engine demo-assets
+# 렌더:        python -m video_engine render video_engine/examples/ep_demo.yaml
+# 쇼츠:        python -m video_engine shorts video_engine/examples/ep_demo.yaml --cuts 2-7
+#
+# 자막 표기:  *강조* → 노랑   [사투리] → 주황   (화자 keywords도 자동 주황)
+# 경로는 이 파일이 있는 폴더 기준. 윈도우 절대경로는 'C:/영상/소스/a.png' 처럼 슬래시로 쓰거나
+# 작은따옴표로 감싸세요 (큰따옴표 안의 \ 는 YAML이 특수문자로 읽습니다).
+
+meta:
+  title: "부아콤 1화 — 옆집 부산아재 (데모)"
+  fps: 30
+  size: [1920, 1080]
+  preset: buakom           # buakom | calm | presets 폴더의 다른 파일 이름
+  # output: out/부아콤_01.mp4
+
+bgm:
+  main:  {file: assets/bgm_main.wav, volume_db: 0}
+  dream: {file: assets/bgm_dream.wav, volume_db: -2}
+
+# 효과음 파일을 따로 지정하려면 (없으면 엔진이 만든 임시 효과음 사용)
+# sfx:
+#   dingdong: 'D:/효과음/지하철_딩동.wav'
+#   scratch:  'D:/효과음/레코드_스크래치.wav'
+
+shorts:
+  hook_text: "옆집 아재가 새벽에 던진 한마디"
+
+cuts:
+  - id: 1
+    type: insert
+    media: assets/hallway.png
+    duration: 1.6
+    transition: {type: door_wipe, to: "새벽 4시역"}
+    bgm_cue: main
+
+  - id: 2
+    type: lip                         # mp4 안에 음성이 들어있으면 audio 생략 가능
+    media: assets/dongcheol_talk_02.mp4
+    speaker: 동철
+    subtitle: "아따, 새벽부터 와이리 *시끄럽노*?"
+    effects:
+      - punch_zoom: {at: 0.5}
+
+  - id: 3
+    type: vo                          # 속마음: 입 다문 정지 그림 + 음성 → 구름 말풍선 자동
+    media: assets/soyul_closed.png
+    audio: assets/vo_03.wav
+    speaker: 소율
+    subtitle: "옆집 아저씨… 설마 또 *나 때문에*?"
+
+  - id: 4
+    type: vo
+    media: assets/soyul_wall.png
+    audio: assets/line_04.wav
+    speaker: 동철                     # 벽 너머에서 들리는 동철 목소리
+    no_auto: [vo_cloud]               # 속마음이 아니므로 자동 구름 말풍선은 끔
+    subtitle: "(벽 너머) 밥은 [뭇나]?"
+    effects:
+      - wall_voice
+      - dialect_note: "뭇나 = 먹었나"
+
+  - id: 5
+    type: vo
+    media: assets/soyul_closed.png
+    audio: assets/vo_05.wav
+    speaker: 소율
+    subtitle: "뭇나…? 무슨 *암호*야?"
+    sfx:
+      - {name: pop, at: 0.1}
+
+  - id: 6
+    type: vo
+    media: assets/soyul_dream.png
+    audio: assets/vo_06.wav
+    speaker: 소율
+    subtitle: "혹시… 나한테 *관심* 있는 거 아냐?"
+    effects: [fantasy]
+    bgm_cue: dream
+
+  - id: 7
+    type: insert
+    media: assets/dongcheol_still.png
+    duration: 1.0
+    effects:
+      - brake_scratch: {at: 0.0}
+      - freeze_sticker: "배동철, 47세.\n오해 중."
+
+  - id: 8
+    type: lip
+    media: assets/mom_talk.mp4
+    audio: assets/line_08.wav
+    speaker: 엄마
+    subtitle: "동철아! 니 또 옆집 아가씨 *괴롭히나*!"
+    transition: {type: door_wipe, to: "오후 2시역"}    # from은 앞의 역(새벽 4시역)이 자동
+    bgm_cue: main
+
+  - id: 9
+    type: lip
+    media: assets/dongcheol_talk.mp4
+    audio: assets/line_09.wav
+    speaker: 동철
+    subtitle: "[오롬실]! 내가 언제!"
+    effects:
+      - orom_sil: {at: 0.35}
+
+  - id: 10
+    type: vo
+    media: assets/soyul_happy.png
+    audio: assets/vo_10.wav
+    speaker: 소율
+    subtitle: "*아싸 가오리*! 오해였구나~"
+    effects: [assa_gaori]

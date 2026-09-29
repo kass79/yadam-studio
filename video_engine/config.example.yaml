@@ -1,0 +1,40 @@
+# 내 PC 설정 — 이 파일을 config.yaml 로 복사해서 고쳐 쓰세요.
+# 찾는 순서: --config 로 준 파일 → 매니페스트 폴더 → 그 상위 폴더 → 현재 폴더 → video_engine 폴더
+# 경로는 슬래시(/)로 쓰거나 '작은따옴표'로 감싸세요. (큰따옴표 안의 \ 는 YAML 특수문자)
+# 비밀키·개인정보는 넣지 마세요 (이 엔진은 인터넷을 쓰지 않습니다).
+
+engine:
+  ffmpeg: ffmpeg            # PATH에 없으면 'C:/ffmpeg/bin/ffmpeg.exe'
+  jobs: 4                   # 동시에 렌더할 컷 수 (0 = 자동)
+  cache: true               # 바뀐 컷만 다시 렌더
+
+video:
+  encoder: h264_nvenc       # RTX 그래픽카드 하드웨어 인코딩 (없으면 libx264)
+  nvenc_preset: p5
+  nvenc_cq: 19
+  # encoder: libx264
+  # crf: 18
+  # preset: medium
+
+fonts:
+  main: 'C:/Windows/Fonts/Pretendard-Bold.otf'
+  regular: 'C:/Windows/Fonts/Pretendard-Regular.otf'
+  heavy: 'C:/Windows/Fonts/Pretendard-Black.otf'
+  handwriting: 'C:/Windows/Fonts/NanumPen.ttf'     # 속마음 구름 자막 손글씨체
+
+# 효과음 이름 → 파일. 없는 이름은 엔진이 만든 임시 효과음 사용
+sfx:
+  dingdong: 'D:/부아콤/효과음/딩동.wav'
+  scratch:  'D:/부아콤/효과음/스크래치.wav'
+  heartbeat: 'D:/부아콤/효과음/심장.wav'
+  pop:      'D:/부아콤/효과음/뽁.wav'
+  jingle:   'D:/부아콤/효과음/징글.wav'
+  punch:    {file: 'D:/부아콤/효과음/휙.wav', gain_db: -2}
+  freeze:   'D:/부아콤/효과음/찰칵.wav'
+
+assets:
+  manta: 'D:/부아콤/스티커/가오리.png'    # assa_gaori 스티커 (없으면 코드로 그린 실루엣)
+
+# 화자 스타일을 PC 공통으로 덮어쓰기 (프리셋보다 우선)
+# speakers:
+#   동철: {keywords: [아따, 뭇나, 시끄럽노, 쫌]}
